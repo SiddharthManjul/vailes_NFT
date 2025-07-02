@@ -81,4 +81,25 @@ contract Vials_NFTTest is Test {
         assertEq(vialsNFT.tokenURI(0), TOKEN_URI);
         assertEq(vialsNFT.tokenURI(1), tokenURI2);
     }
+
+    function test_MintVialsNFT_RevertWhenNotOwner() public {
+        vm.prank(user1);
+        vm.expectRevert(abi.encodeWithSignature("OwnableUnauthorizedAccount(address)", user1));
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, TOKEN_URI);
+    }
+    
+    function test_MintVialsNFT_RevertWhenMintingToZeroAddress() public {
+        vm.prank(owner);
+        vm.expectRevert(abi.encodeWithSignature("ERC721InvalidReceiver(address)", address(0)));
+        vialsNFT.mintVialsNFT(address(0), BASE_TOKEN_ID, TOKEN_URI);
+    }
+    
+    function test_MintVialsNFT_EmitsCorrectEvent() public {
+        vm.prank(owner);
+        
+        vm.expectEmit(true, true, true, true);
+        emit VialsNFTMinted(user1, 0, baseContract, BASE_TOKEN_ID, TOKEN_URI);
+        
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, TOKEN_URI);
+    }
 }
