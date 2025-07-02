@@ -34,4 +34,21 @@ contract Vials_NFTTest is Test {
         vm.prank(owner);
         vialsNFT = new Vials_NFT(baseContract, NAME, SYMBOL, owner);
     }
+
+    function test_deployment_SetsCorrectNameAndSymbol() view public {
+        assertEq(vialsNFT.name(), NAME);
+        assertEq(vialsNFT.symbol(), SYMBOL);
+    }
+
+    function test_Deployment_SetsCorrectOwner() view public {
+        assertEq(vialsNFT.owner(), owner);
+    }
+
+    function test_Deployment_SetsCorrectBaseContract() view public {
+        assertEq(vialsNFT.baseContract(), baseContract);
+    }
+
+    function test_Deployment_InitializeNextTokenIdToZero() view public {
+        assertEq(vialsNFT.nextTokenId(), 0);
+    }
 }
