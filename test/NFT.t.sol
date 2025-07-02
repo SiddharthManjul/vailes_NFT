@@ -14,7 +14,7 @@ contract Vials_NFTTest is Test {
 
     string constant NAME = "VialsNFT";
     string constant SYMBOL = "VIALS";
-    string constant BASE_URI = "https://example.com/vials/";
+    string constant TOKEN_URI = "https://example.com/vials/";
     uint256 public BASE_TOKEN_ID = 123;
 
     event VialsNFTMinted(
@@ -50,5 +50,35 @@ contract Vials_NFTTest is Test {
 
     function test_Deployment_InitializeNextTokenIdToZero() view public {
         assertEq(vialsNFT.nextTokenId(), 0);
+    }
+
+    function test_MintVialsNFT_Success() public {
+        vm.prank(owner);
+
+        vm.expectEmit(true, true, true, true);
+        emit VialsNFTMinted(user1, 0, baseContract, BASE_TOKEN_ID, TOKEN_URI);
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, TOKEN_URI);
+        
+        assertEq(vialsNFT.ownerOf(0), user1);
+        assertEq(vialsNFT.tokenURI(0), TOKEN_URI);
+        assertEq(vialsNFT.nextTokenId(), 1);
+    }
+
+    function test_MintVialsNFT_MultipleTokensIncrementId() public {
+        string memory tokenURI2 = "https://example.com/vials/2";
+        uint256 baseTokenId2 = 456;
+
+        vm.startPrank(owner);
+
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, TOKEN_URI);
+        vialsNFT.mintVialsNFT(user2, baseTokenId2, tokenURI2);
+
+        vm.stopPrank();
+
+        assertEq(vialsNFT.ownerOf(0), user1);
+        assertEq(vialsNFT.ownerOf(1), user2);
+        assertEq(vialsNFT.nextTokenId(), 2);
+        assertEq(vialsNFT.tokenURI(0), TOKEN_URI);
+        assertEq(vialsNFT.tokenURI(1), tokenURI2);
     }
 }
