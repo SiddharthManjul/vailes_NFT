@@ -240,4 +240,43 @@ contract VialsNFTTest is Test {
         uint256 derivativeTokenId = vialsNFT.getDerivativeTokenId(address(mockERC721), baseTokenId);
         assertEq(derivativeTokenId, 0);
     }
+
+    function test_GetOwnedDerivatives_Success() public {
+        // Setup: mint multiple base NFTs and derivatives
+        uint256 baseTokenId1 = mockERC721.mint(user1);
+        uint256 baseTokenId2 = mockERC721.mint(user1);
+        
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId1, VIAL_TYPE, TOKEN_URI);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId2, "ghibli", TOKEN_URI);
+        vm.stopPrank();
+        
+        // Test: get owned derivatives
+        (uint256[] memory tokenIds, Vials_NFT.Provenance[] memory provenances) = 
+            vialsNFT.getOwnedDerivatives(user1);
+        
+        assertEq(tokenIds.length, 2);
+        assertEq(provenances.length, 2);
+        
+        // Verify first derivative
+        assertEq(tokenIds[0], 0);
+        assertEq(provenances[0].baseContract, address(mockERC721));
+        assertEq(provenances[0].baseTokenId, baseTokenId1);
+        assertEq(provenances[0].vialType, VIAL_TYPE);
+        
+        // Verify second derivative
+        assertEq(tokenIds[1], 1);
+        assertEq(provenances[1].baseContract, address(mockERC721));
+        assertEq(provenances[1].baseTokenId, baseTokenId2);
+        assertEq(provenances[1].vialType, "ghibli");
+    }
+    
+    function test_GetOwnedDerivatives_EmptyForNoOwnership() public {
+        // Test: get owned derivatives for user with no derivatives
+        (uint256[] memory tokenIds, Vials_NFT.Provenance[] memory provenances) = 
+            vialsNFT.getOwnedDerivatives(user2);
+        
+        assertEq(tokenIds.length, 0);
+        assertEq(provenances.length, 0);
+    }
 }
