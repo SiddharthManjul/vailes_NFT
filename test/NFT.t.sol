@@ -345,4 +345,48 @@ contract VialsNFTTest is Test {
         assertTrue(vialsNFT.hasDerivative(address(mockERC721), baseTokenId1));
         assertTrue(vialsNFT.hasDerivative(address(mockERC721_2), baseTokenId2));
     }
+
+    function test_NextTokenId_IncrementsCorrectly() public {
+        // Setup: mint base NFTs
+        uint256 baseTokenId1 = mockERC721.mint(user1);
+        uint256 baseTokenId2 = mockERC721.mint(user1);
+        
+        // Test: mint derivatives and check nextTokenId increments
+        assertEq(vialsNFT.nextTokenId(), 0);
+        
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId1, VIAL_TYPE, TOKEN_URI);
+        assertEq(vialsNFT.nextTokenId(), 1);
+        
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId2, "ghibli", TOKEN_URI);
+        assertEq(vialsNFT.nextTokenId(), 2);
+        vm.stopPrank();
+    }
+
+    function testFuzz_MintDerivative_WithDifferentVialTypes(string memory vialType) public {
+        // Setup: mint base NFT
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        // Test: mint derivative with fuzzed vial type
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId, vialType, TOKEN_URI);
+        vm.stopPrank();
+        
+        // Verify vial type is stored correctly
+        Vials_NFT.Provenance memory prov = vialsNFT.getProvenance(0);
+        assertEq(prov.vialType, vialType);
+    }
+    
+    function testFuzz_MintDerivative_WithDifferentTokenURIs(string memory tokenURI) public {
+        // Setup: mint base NFT
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        // Test: mint derivative with fuzzed token URI
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId, VIAL_TYPE, tokenURI);
+        vm.stopPrank();
+        
+        // Verify token URI is stored correctly
+        assertEq(vialsNFT.tokenURI(0), tokenURI);
+    }
 }
