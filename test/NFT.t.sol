@@ -298,4 +298,51 @@ contract VialsNFTTest is Test {
         vm.expectRevert("Token does not exist");
         vialsNFT.tokenURI(999);
     }
+
+    function test_MintDerivative_WithEmptyVialType() public {
+        // Setup: mint base NFT
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        // Test: mint derivative with empty vial type
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId, "", TOKEN_URI);
+        vm.stopPrank();
+        
+        // Verify empty vial type is stored
+        Vials_NFT.Provenance memory prov = vialsNFT.getProvenance(0);
+        assertEq(prov.vialType, "");
+    }
+    
+    function test_MintDerivative_WithEmptyTokenURI() public {
+        // Setup: mint base NFT
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        // Test: mint derivative with empty token URI
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId, VIAL_TYPE, "");
+        vm.stopPrank();
+        
+        // Verify empty token URI is stored
+        assertEq(vialsNFT.tokenURI(0), "");
+    }
+    
+    function test_MultipleDerivativesFromDifferentBaseContracts() public {
+        // Setup: create another mock ERC721 contract
+        MockERC721 mockERC721_2 = new MockERC721();
+        
+        // Mint base NFTs from different contracts
+        uint256 baseTokenId1 = mockERC721.mint(user1);
+        uint256 baseTokenId2 = mockERC721_2.mint(user1);
+        
+        // Test: mint derivatives from different base contracts
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId1, VIAL_TYPE, TOKEN_URI);
+        vialsNFT.mintDerivative(address(mockERC721_2), baseTokenId2, "ghibli", TOKEN_URI);
+        vm.stopPrank();
+        
+        // Verify both derivatives exist
+        assertEq(vialsNFT.balanceOf(user1), 2);
+        assertTrue(vialsNFT.hasDerivative(address(mockERC721), baseTokenId1));
+        assertTrue(vialsNFT.hasDerivative(address(mockERC721_2), baseTokenId2));
+    }
 }
