@@ -189,4 +189,55 @@ contract VialsNFTTest is Test {
         // Verify user2 owns the derivative
         assertEq(vialsNFT.ownerOf(0), user2);
     }
+
+    function test_GetProvenance_Success() public {
+        // Setup: mint base NFT and derivative
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId, VIAL_TYPE, TOKEN_URI);
+        vm.stopPrank();
+        
+        // Test: get provenance
+        Vials_NFT.Provenance memory prov = vialsNFT.getProvenance(0);
+        assertEq(prov.baseContract, address(mockERC721));
+        assertEq(prov.baseTokenId, baseTokenId);
+        assertEq(prov.vialType, VIAL_TYPE);
+        assertGt(prov.timestamp, 0);
+    }
+    
+    function test_GetProvenance_RevertWhenTokenNotExists() public {
+        // Test: get provenance of non-existent token
+        vm.expectRevert("Token does not exist");
+        vialsNFT.getProvenance(999);
+    }
+    
+    function test_HasDerivative_ReturnsCorrectly() public {
+        // Setup: mint base NFT
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        // Test: initially no derivative
+        assertFalse(vialsNFT.hasDerivative(address(mockERC721), baseTokenId));
+        
+        // Mint derivative
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId, VIAL_TYPE, TOKEN_URI);
+        vm.stopPrank();
+        
+        // Test: now has derivative
+        assertTrue(vialsNFT.hasDerivative(address(mockERC721), baseTokenId));
+    }
+    
+    function test_GetDerivativeTokenId_ReturnsCorrectly() public {
+        // Setup: mint base NFT and derivative
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId, VIAL_TYPE, TOKEN_URI);
+        vm.stopPrank();
+        
+        // Test: get derivative token ID
+        uint256 derivativeTokenId = vialsNFT.getDerivativeTokenId(address(mockERC721), baseTokenId);
+        assertEq(derivativeTokenId, 0);
+    }
 }
