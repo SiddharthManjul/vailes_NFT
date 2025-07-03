@@ -132,4 +132,61 @@ contract VialsNFTTest is Test {
         vialsNFT.mintDerivative(address(mockERC721), 999, VIAL_TYPE, TOKEN_URI);
         vm.stopPrank();
     }
+
+    function test_AdminMintDerivative_Success() public {
+        // Setup: mint base NFT to user1
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        // Test: admin mints derivative to user2
+        vm.startPrank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit VialsNFTMinted(user2, 0, address(mockERC721), baseTokenId, VIAL_TYPE, TOKEN_URI);
+        
+        vm.expectEmit(true, true, true, true);
+        emit DerivativeCreated(address(mockERC721), baseTokenId, 0, VIAL_TYPE);
+        
+        vialsNFT.adminMintDerivative(user2, address(mockERC721), baseTokenId, VIAL_TYPE, TOKEN_URI);
+        vm.stopPrank();
+        
+        // Verify results
+        assertEq(vialsNFT.balanceOf(user2), 1);
+        assertEq(vialsNFT.ownerOf(0), user2);
+        assertEq(vialsNFT.tokenURI(0), TOKEN_URI);
+        assertEq(vialsNFT.nextTokenId(), 1);
+        
+        // Verify provenance
+        Vials_NFT.Provenance memory prov = vialsNFT.getProvenance(0);
+        assertEq(prov.baseContract, address(mockERC721));
+        assertEq(prov.baseTokenId, baseTokenId);
+        assertEq(prov.vialType, VIAL_TYPE);
+        assertGt(prov.timestamp, 0);
+        
+        // Verify derivative tracking
+        assertTrue(vialsNFT.hasDerivative(address(mockERC721), baseTokenId));
+        assertEq(vialsNFT.getDerivativeTokenId(address(mockERC721), baseTokenId), 0);
+    }
+    
+    function test_AdminMintDerivative_RevertWhenNotOwner() public {
+        // Setup: mint base NFT to user1
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        // Test: non-owner tries to admin mint
+        vm.startPrank(nonOwner);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner));
+        vialsNFT.adminMintDerivative(user2, address(mockERC721), baseTokenId, VIAL_TYPE, TOKEN_URI);
+        vm.stopPrank();
+    }
+    
+    function test_AdminMintDerivative_CanOverrideOwnershipCheck() public {
+        // Setup: mint base NFT to user1
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        // Test: admin can mint derivative to user2 even though user2 doesn't own base NFT
+        vm.startPrank(owner);
+        vialsNFT.adminMintDerivative(user2, address(mockERC721), baseTokenId, VIAL_TYPE, TOKEN_URI);
+        vm.stopPrank();
+        
+        // Verify user2 owns the derivative
+        assertEq(vialsNFT.ownerOf(0), user2);
+    }
 }
