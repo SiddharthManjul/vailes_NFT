@@ -145,4 +145,24 @@ contract Vials_NFTTest is Test {
         assertEq(prov2.baseContract, baseContract);
         assertEq(prov2.baseTokenId, baseTokenId);
     }
+
+    function test_TokenURI_Success() public {
+        vm.prank(owner);
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, TOKEN_URI);
+
+        string memory uri = vialsNFT.tokenURI(0);
+        assertEq(uri, TOKEN_URI);
+    }
+
+    function test_TokenURI_RevertForNonExistentToken() public {
+        vm.expectRevert(abi.encodeWithSignature("ERC721NonexistentToken(uint256)", 999));
+        vialsNFT.tokenURI(999);
+    }
+
+    function test_TokenURI_EmptyURIAllowed() public {
+        vm.prank(owner);
+
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, "");
+        assertEq(vialsNFT.tokenURI(0), "");
+    }
 }
