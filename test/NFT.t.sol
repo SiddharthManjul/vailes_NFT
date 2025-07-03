@@ -253,4 +253,20 @@ contract Vials_NFTTest is Test {
 
         assertTrue(vialsNFT.isApprovedForAll(user1, user2));
     }
+
+    function test_MintWithZeroBaseTokenId() public {
+        vm.prank(owner);
+        vialsNFT.mintVialsNFT(user1, 0, TOKEN_URI);
+
+        Vials_NFT.Provenance memory prov = vialsNFT.getProvenance(0);
+        assertEq(prov.baseTokenId, 0);
+    }
+
+    function test_LongTokenURI() public {
+        string memory longURI = "https://example.com/metadata/very/long/path/that/goes/on/and/on/and/on/and/on/1.json";
+        vm.prank(owner);
+
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, longURI);
+        assertEq(vialsNFT.tokenURI(0), longURI);
+    }
 }
