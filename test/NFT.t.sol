@@ -269,4 +269,26 @@ contract Vials_NFTTest is Test {
         vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, longURI);
         assertEq(vialsNFT.tokenURI(0), longURI);
     }
+
+    function testFuzz_MintWithRandomBaseTokenId(uint256 baseTokenId) public {
+        vm.prank(owner);
+        vialsNFT.mintVialsNFT(user1, baseTokenId, TOKEN_URI);
+
+        Vials_NFT.Provenance memory prov = vialsNFT.getProvenance(0);
+        assertEq(prov.baseTokenId, baseTokenId);
+    }
+
+    function testFuzz_MintMultipleTokens(uint8 numTokens) public {
+        vm.assume(numTokens > 0 && numTokens <= 100);
+
+        vm.startPrank(owner);
+        for (uint8 i = 0; i < numTokens; i++) {
+            vialsNFT.mintVialsNFT(user1, i, TOKEN_URI);
+        }
+        vm.stopPrank();
+        assertEq(vialsNFT.nextTokenId(), numTokens);
+        assertEq(vialsNFT.balanceOf(user1), numTokens);
+    }
 }
+
+
