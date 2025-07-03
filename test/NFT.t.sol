@@ -217,5 +217,40 @@ contract Vials_NFTTest is Test {
         assertEq(vialsNFT.balanceOf(user2), 1);
     }
 
-    
+    function test_ApprovalAndTransfer_Success() public {
+        vm.prank(owner);
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, TOKEN_URI);
+
+        vm.prank(user1);
+        vialsNFT.approve(user2, 0);
+
+        assertEq(vialsNFT.getApproved(0), user2);
+
+        vm.prank(user2);
+        vialsNFT.transferFrom(user1, user2, 0);
+
+        assertEq(vialsNFT.ownerOf(0), user2);
+        assertEq(vialsNFT.balanceOf(user1), 0);
+        assertEq(vialsNFT.balanceOf(user2), 1);
+    }
+
+    function test_GetApproved_Success() public {
+        vm.prank(owner);
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, TOKEN_URI);
+
+        vm.prank(user1);
+        vialsNFT.approve(user2, 0);
+
+        assertEq(vialsNFT.getApproved(0), user2);
+    }
+
+    function test_SetApprovalForAll_Success() public {
+        vm.prank(owner);
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, TOKEN_URI);
+
+        vm.prank(user1);
+        vialsNFT.setApprovalForAll(user2, true);
+
+        assertTrue(vialsNFT.isApprovedForAll(user1, user2));
+    }
 }
