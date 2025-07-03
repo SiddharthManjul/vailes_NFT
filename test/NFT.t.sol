@@ -22,4 +22,40 @@ contract MockERC721 is ERC721 {
     }
 }
 
+contract VialsNFTTest is Test {
+    Vials_NFT public vialsNFT;
+    MockERC721 public mockERC721;
+
+    address public owner = address(0x1);
+    address public user1 = address(0x2);
+    address public user2 = address(0x3);
+    address public nonOwner = address(0x4);
+
+    string constant VIAL_TYPE = "pixelify";
+    string constant TOKEN_URI = "https://example.com/metadata.json";
+
+    event VialsNFTMinted(
+        address indexed to,
+        uint256 indexed tokenId,
+        address indexed baseContract,
+        uint256 baseTokenId,
+        string vialType,
+        string tokenURI
+    );
+
+    event DerivativeCreated(
+        address indexed baseContract,
+        uint256 indexed baseTokenId,
+        uint256 indexed derivativeTokenId,
+        string vialType
+    );
+
+    function setUp() public {
+        vm.startPrank(owner);
+        vialsNFT = new Vials_NFT("VialsNFT", "VIAL", owner);
+        mockERC721 = new MockERC721();
+        vm.stopPrank();
+    }
+}
+
 
