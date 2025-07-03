@@ -271,12 +271,31 @@ contract VialsNFTTest is Test {
         assertEq(provenances[1].vialType, "ghibli");
     }
     
-    function test_GetOwnedDerivatives_EmptyForNoOwnership() public {
+    function test_GetOwnedDerivatives_EmptyForNoOwnership() view public {
         // Test: get owned derivatives for user with no derivatives
         (uint256[] memory tokenIds, Vials_NFT.Provenance[] memory provenances) = 
             vialsNFT.getOwnedDerivatives(user2);
         
         assertEq(tokenIds.length, 0);
         assertEq(provenances.length, 0);
+    }
+
+    function test_TokenURI_Success() public {
+        // Setup: mint base NFT and derivative
+        uint256 baseTokenId = mockERC721.mint(user1);
+        
+        vm.startPrank(user1);
+        vialsNFT.mintDerivative(address(mockERC721), baseTokenId, VIAL_TYPE, TOKEN_URI);
+        vm.stopPrank();
+        
+        // Test: get token URI
+        string memory uri = vialsNFT.tokenURI(0);
+        assertEq(uri, TOKEN_URI);
+    }
+    
+    function test_TokenURI_RevertWhenTokenNotExists() public {
+        // Test: get token URI of non-existent token
+        vm.expectRevert("Token does not exist");
+        vialsNFT.tokenURI(999);
     }
 }
