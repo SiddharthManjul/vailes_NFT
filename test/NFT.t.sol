@@ -122,4 +122,27 @@ contract Vials_NFTTest is Test {
         assertEq(retrievedBaseContract, baseContract);
         assertEq(retrievedBaseTokenId, BASE_TOKEN_ID);
     }
+
+    function test_GetProvenance_RevertForNonExistentToken() public {
+        vm.expectRevert("Token does not exist");
+        vialsNFT.getProvenance(999);
+    }
+
+    function test_GetProvenance_DifferentTokensDifferentProvenance() public {
+        uint256 baseTokenId = 789;
+        string memory tokenURI2 = "https://example.com/vials/2";
+
+        vm.startPrank(owner);
+        vialsNFT.mintVialsNFT(user1, BASE_TOKEN_ID, TOKEN_URI);
+        vialsNFT.mintVialsNFT(user2, baseTokenId, tokenURI2);
+        vm.stopPrank();
+
+        Vials_NFT.Provenance memory prov1 = vialsNFT.getProvenance(0);
+        Vials_NFT.Provenance memory prov2 = vialsNFT.getProvenance(1);
+
+        assertEq(prov1.baseContract, baseContract);
+        assertEq(prov1.baseTokenId, BASE_TOKEN_ID);
+        assertEq(prov2.baseContract, baseContract);
+        assertEq(prov2.baseTokenId, baseTokenId);
+    }
 }
